@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
@@ -24,6 +25,7 @@ class MyApp extends StatelessWidget {
         // is not restarted.
         primarySwatch: Colors.blue,
       ),
+       debugShowCheckedModeBanner: false,
       home: MyHomePage(title: 'COVID19 Dashboard'),
       //home: Dashboard(),
     );
@@ -49,19 +51,17 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+  String searchString = "";
 
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
+  void setSearchString(String mySearchString){
+    this.searchString = mySearchString;
   }
 
+  String getSearchString(){
+    return this.searchString;
+  }
+
+  
   @override
   Widget build(BuildContext context) {
     // This method is rerun every time setState is called, for instance as done
@@ -76,10 +76,53 @@ class _MyHomePageState extends State<MyHomePage> {
         SliverAppBar(
                 floating: true,
         snap: true,
-        expandedHeight: 250,
+        expandedHeight: 100,
         flexibleSpace: FlexibleSpaceBar(
-          background: new Image.network("https://cdn.pixabay.com/photo/2020/04/03/06/58/social-distancing-4997637_1280.jpg",
-          fit: BoxFit.fill),
+          background: Column(
+            children: <Widget>[
+              //new Image.network("https://cdn.pixabay.com/photo/2020/04/03/06/58/social-distancing-4997637_1280.jpg",
+              //fit: BoxFit.fill),
+              Padding(
+                padding: const EdgeInsets.only(top:25.0),
+                child: Text('COVID-19 Tracker',style: TextStyle(fontSize: 35,color: Colors.white),),
+              ),
+              Expanded(child: 
+              Padding(
+                padding: const EdgeInsets.fromLTRB(10.0, 0.0, 15.0, 10.0),
+                child: Container(
+                  height: 10.0,
+                  width: double.infinity,
+                  child: CupertinoTextField(
+                    keyboardType: TextInputType.text,
+                    readOnly: true,
+                     onSubmitted: (text) {
+                        setSearchString(text);
+                      },
+                    placeholder: 'Search functionality under construction!',
+                    placeholderStyle: TextStyle(
+                      color: Color(0xffC4C6CC),
+                      fontSize: 14.0,
+                      fontFamily: 'Brutal',
+                      ),
+                    prefix: Padding(
+                      padding:
+                          const EdgeInsets.fromLTRB(10.0, 0.0, 15.0, 10.0),
+                      child: Icon(
+                        Icons.search,
+                        color: Color(0xffC4C6CC),
+                      ),
+                    ),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(8.0),
+                      color: Color(0xffF0F1F5),
+                    ),
+                  ),
+                ),
+              ),
+              ),
+            ],
+          ),
+           
         ),
         ),
         SliverFillRemaining(child: ListPage()),
@@ -93,12 +136,24 @@ class _MyHomePageState extends State<MyHomePage> {
 }
 
 class ListPage extends StatefulWidget {
+  final String searchString;
+
+  ListPage({this.searchString});
+
+
   @override
   _ListPageState createState() => _ListPageState();
 }
 
 class _ListPageState extends State<ListPage> {
   
+@override
+  void initState() {
+    //items.addAll(duplicateItems);
+    super.initState();
+  }
+
+
   Future getFirestoreData() async {
     var firestoreObj = Firestore.instance;
     QuerySnapshot qs = await firestoreObj
@@ -207,12 +262,24 @@ class DetailPage extends StatefulWidget {
 class _DetailPageState extends State<DetailPage> {
 
   String currentStateName;
+  QuerySnapshot qs;
+
 
  String setStateName(String state){
    this.currentStateName = state;
+   setQS(state);
    return this.currentStateName;
  }
 
+Future<QuerySnapshot> setQS(String stateName) async{
+   QuerySnapshot querySnapshot = await Firestore.instance
+        .collection('COVID19_NYTimes')
+        .where("State", isEqualTo: stateName)
+        .orderBy("Date")
+        .getDocuments();  
+  this.qs = querySnapshot;
+  return querySnapshot;
+}
   
   dynamic getCasesData(String stateName) async {
     print(stateName);
@@ -261,29 +328,30 @@ class _DetailPageState extends State<DetailPage> {
     return stateDataList;
   }
 
-final CollectionReference fireData = Firestore.instance.collection('COVID19_NYTimes');
 
- 
+ final CollectionReference fireData = Firestore.instance.collection('COVID19_NYTimes');
 Widget build(BuildContext context) { 
     print('################################################');
-    print(widget.state.data);
+    //print(widget.state.data);
     setStateName(widget.state.data['State']);
-    //print(widget.state);
-    return Scaffold( 
-          appBar: AppBar(
-        backgroundColor: Colors.greenAccent,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        leading: IconButton(
-          icon: Icon(Icons.menu),
-          onPressed: () {
-            //
-          },
+    //print(qs.sn);
+    return Scaffold(
+      body: CustomScrollView(
+        slivers: <Widget>[
+        SliverAppBar(
+                floating: true,
+        snap: true,
+        expandedHeight: 250,
+        flexibleSpace: FlexibleSpaceBar(
+          background: new Image.network("https://cdn.pixabay.com/photo/2020/04/03/06/58/social-distancing-4997637_1280.jpg",
+          fit: BoxFit.fill),
+          title: Padding(
+            padding: const EdgeInsets.only(bottom: 120),
+            child: Text('Location: '+currentStateName,style: TextStyle(fontSize:16.0,color: Colors.black ),),
+          ),
         ),
-
-        title: Text(currentStateName),
-      ),
-        body: StreamBuilder<void>( 
+        ),
+        SliverFillRemaining(child: StreamBuilder<void>( 
           stream: fireData.snapshots(), 
           builder: (BuildContext context, AsyncSnapshot snapshot) { 
             Widget widget;
@@ -391,7 +459,11 @@ Widget build(BuildContext context) {
           ),
         ); 
           }, 
-        )); 
+        ),
+        ),         
+        ],
+      ), 
+        ); 
   } 
 }
 

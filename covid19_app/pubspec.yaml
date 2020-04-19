@@ -46,12 +46,19 @@ dependencies:
   #firebase_database: ^0.2.5      #works on android
   #firebase_storage: '>=0.1.4'    #not Working on android
   #firebase_storage: '0.2.0'       #not working on android
+dependency_overrides:
+  image: 2.0.7
 
-
-dev_dependencies:
+dev_dependencies: 
   flutter_test:
-    sdk: flutter 
-    
+    sdk: flutter
+
+  flutter_launcher_icons: 
+
+flutter_icons:
+  image_path: "assets/flutter-app-icon.png" 
+  android: true
+  ios: true    
 
 
 # For information on the generic Dart part of this file, see the
@@ -66,10 +73,10 @@ flutter:
   uses-material-design: true
 
   # To add assets to your application, add an assets section, like this:
-assets:
-   - images/Faimly_face_mask.jpg
-   - images/group_face_mask.jpg
-   - images/nurse_face_maskjpg
+#assets:
+#   - images/Faimly_face_mask.jpg
+#   - images/group_face_mask.jpg
+#   - images/nurse_face_maskjpg
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.
